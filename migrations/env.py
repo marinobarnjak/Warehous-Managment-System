@@ -7,6 +7,7 @@ from alembic import context
 
 from database.base import Base
 from models.product import Product
+from database.connection import engine
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -60,11 +61,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = engine
 
     with connectable.connect() as connection:
         context.configure(
