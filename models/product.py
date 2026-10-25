@@ -14,6 +14,6 @@ class Product(Base):
     name : Mapped[str] = mapped_column(nullable=False)
     sku : Mapped[str] = mapped_column(nullable=False, unique=True)
     price : Mapped[Decimal] = mapped_column(Numeric(10,2), nullable=False, server_default="0")
-    quntity : Mapped[int] = mapped_column(nullable=False, server_default="0")
+    quantity : Mapped[int] = mapped_column(nullable=False, server_default="0")
     min_stock : Mapped[int] = mapped_column(nullable=False, server_default="0")
     stock_movement : Mapped[list["StockMovement"]] = relationship(back_populates="product")
