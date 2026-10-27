@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from models.stock_movement import StockMovement
+    from models.supplier import Supplier
 
 class Product(Base):
     __tablename__ = "products"
@@ -17,3 +18,4 @@ class Product(Base):
     quantity : Mapped[int] = mapped_column(nullable=False, server_default="0")
     min_stock : Mapped[int] = mapped_column(nullable=False, server_default="0")
     stock_movement : Mapped[list["StockMovement"]] = relationship(back_populates="product")
+    suppliers : Mapped[list["Supplier"]] = relationship(secondary="product_suppliers", back_populates="products")
