@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from models.product import Product
+    from models.order import Order
 
 class Supplier(Base):
     __tablename__ = "suppliers"
@@ -15,3 +16,4 @@ class Supplier(Base):
     phone : Mapped[str | None] = mapped_column(nullable=True)
     created_at : Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     products : Mapped[list["Product"]] = relationship(secondary="product_suppliers", back_populates="suppliers")
+    orders : Mapped[list["Order"]] = relationship(back_populates="supplier")
