@@ -30,7 +30,7 @@ class ProductService():
             product.name = name
             product.sku = sku
             product.price = price
-            product.quntity = 0
+            product.quantity = 0
             product.min_stock = min_stock
             
             self.session.add(product)
