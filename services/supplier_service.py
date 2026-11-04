@@ -17,7 +17,7 @@ class SupplierService():
 
         return self.session.scalars(stmt).all()
 
-    def create_supplier(self, name: str, email: str | None, phone: str | None) -> Supplier | None:
+    def create_supplier(self, name: str, email: str | None = None, phone: str | None = None) -> Supplier | None:
         name = name.strip()
 
         if not name:
