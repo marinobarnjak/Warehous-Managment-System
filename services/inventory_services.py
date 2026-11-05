@@ -11,11 +11,12 @@ class InventoryService():
         self.product_service = product
 
     def receive_stock(self, sku: str, quantity: int) -> StockMovement:
-
+    
         if quantity < 1:
             raise ValueError("Quantity must be greater than zero")
 
-        product = self.product_service.get_product(sku)
+        stmt = select(Product).where(Product.sku == sku).with_for_update().execution_options(populate_existing=True)
+        product = self.session.scalar(stmt)
 
         if not product:
             raise ValueError("Product with given SKU does not exist")
@@ -34,9 +35,10 @@ class InventoryService():
     def issue_stock(self, sku: str, quantity: int) -> StockMovement:
 
         if quantity < 1:
-            raise ValueError("Quantity must be greater than zero")
-
-        product = self.product_service.get_product(sku)
+                    raise ValueError("Quantity must be greater than zero")
+        
+        stmt = select(Product).where(Product.sku == sku).with_for_update().execution_options(populate_existing=True)
+        product = self.session.scalar(stmt)
 
         if not product:
             raise ValueError("Product with given SKU does not exist")
