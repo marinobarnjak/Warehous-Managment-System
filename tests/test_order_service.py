@@ -281,3 +281,69 @@ def test_cancel_completed_order(order_context, db_session: Session):
 
     with pytest.raises(ValueError):
         service.cancel_order(order.id)
+
+def test_complete_order_atomicity(db_session: Session):
+    product_service = ProductService(db_session)
+    supplier_service = SupplierService(db_session)
+    order_service = OrderService(db_session)
+
+    supplier = supplier_service.create_supplier("HgSpot", None, None)
+
+    product_service.create_product(
+        "Tipkovnica", "TIP-001", Decimal("29.99"), 5
+    )
+    product_service.create_product(
+        "Mis", "MIS-001", Decimal("19.99"), 5
+    )
+
+    db_session.flush()
+
+    supplier_service.add_product_to_supplier(supplier.id, "TIP-001")
+    supplier_service.add_product_to_supplier(supplier.id, "MIS-001")
+
+    order = order_service.create_order(supplier.id)
+    db_session.flush()
+
+    order_service.add_item(order.id, "TIP-001", 2)
+    order_service.add_item(order.id, "MIS-001", 3)
+
+    db_session.flush()
+
+    orginal_receive = InventoryService.receive_stock
+    counter = 0
+
+    def fake_receive(self, sku, quantity):
+        nonlocal counter 
+        counter += 1
+
+        if counter == 2: 
+            raise RuntimeError("Simulated receiving failure")
+
+        return orginal_receive(self, sku, quantity)
+
+    with pytest.raises(RuntimeError):
+        with db_session.begin_nested():
+            with patch.object(InventoryService, "receive_stock", fake_receive):
+                order_service.complete_order(order.id)
+
+    assert counter == 2
+
+    ord = order_service.get_order(order.id)
+    assert ord.status == "pending"
+
+    inventory_service = InventoryService(db_session, product_service)
+    firstProduct = inventory_service.get_stock("TIP-001")
+    secondProduct = inventory_service.get_stock("MIS-001")
+
+    assert firstProduct == 0
+    assert secondProduct == 0
+
+    tip = product_service.get_product("TIP-001")
+    mis = product_service.get_product("MIS-001")
+    movements = db_session.scalars(
+    select(StockMovement).where(
+        StockMovement.product_id.in_([tip.id, mis.id])
+        )
+    ).all()
+
+    assert len(movements) == 0
